@@ -1,19 +1,21 @@
 import requests
 import time
 from src.util.util_io import readJSON
+from src.util.logger import Logger
 from datetime import datetime
 from typing import Dict, List
 
 class WikiDataRequester:
-    def __init__(self) -> None:
+    def __init__(self, logger: Logger) -> None:
         self.headers = readJSON('config')['headers']
         self.last_request = None
+        self.logger = logger
 
     def wait(self) -> None:
         if self.last_request:
             wait_time = max(1.0 - (datetime.now() - self.last_request).total_seconds(), 0.0)
             if wait_time > 0.0:
-                print("Waiting {} seconds".format(wait_time))
+                self.logger.log("Waiting {} seconds".format(wait_time))
             time.sleep(wait_time)
         self.last_request = datetime.now()
 
@@ -26,7 +28,7 @@ class WikiDataRequester:
         try:
             response = requests.get(url, params={'query': query, 'format': 'json'}, headers=self.headers)
             if response.status_code != 200:
-                print('Non-200 Error code')
+                self.logger.log('Non-200 Error code')
                 raise RuntimeError
             return response
         except:
@@ -36,8 +38,8 @@ class WikiDataRequester:
                 raise RuntimeError
 
 class WikiDataQueries:
-    def __init__(self) -> None:
-        self.requester = WikiDataRequester()
+    def __init__(self, logger: Logger) -> None:
+        self.requester = WikiDataRequester(logger)
 
     # Input: a list of full wikipedia links (must be https)
     # Output: A dictionary of full wikipedia links to a dictionary defining the imdb link for each

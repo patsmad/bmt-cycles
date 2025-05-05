@@ -1,18 +1,22 @@
 from src.model.film_data import FilmData
 from src.scraping.wikidata import WikiDataQueries
 from src.api.imdb import IMDBDB
+from src.util.logger import Logger
 from typing import Dict, List, Self
 
 class CompletionistUtilities:
-    def __init__(self, queries: WikiDataQueries, db: IMDBDB) -> None:
+    def __init__(self, queries: WikiDataQueries, db: IMDBDB, logger: Logger) -> None:
         self.queries = queries
         self.db = db
+        self.logger = logger
 
     @classmethod
     def new(cls) -> Self:
+        logger = Logger()
         return CompletionistUtilities(
-            WikiDataQueries(),
-            IMDBDB()
+            WikiDataQueries(logger),
+            IMDBDB(),
+            logger
         )
 
 class Source:

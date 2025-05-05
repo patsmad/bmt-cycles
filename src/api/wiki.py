@@ -10,10 +10,6 @@ class WikiSource(Source):
         self.links, self.soups = self.get_links(link)
         self.wiki_links = WikiSource.filter_links(self.soups)
 
-    def log(self, s: str) -> None:
-        #TODO: Add logger (to stream) from Source
-        print(s)
-
     @staticmethod
     def get_approximate_number(soup) -> int:
         pattern = r'The following [0-9\,]{1,} pages are in this category, out of (approximately )?[0-9\,]{1,} total'
@@ -32,7 +28,7 @@ class WikiSource(Source):
         page = 1
         while len(maybe_next_page) > 0:
             page += 1
-            self.log('Fetching page {} ({} total items)'.format(page, approximate_number))
+            self.utilities.logger.log('Fetching page {} ({} total items)'.format(page, approximate_number))
             links.append('https://en.wikipedia.org{}'.format(maybe_next_page[0]))
             soups.append(soupifyURL(links[-1]))
             maybe_next_page = [a['href'] for a in soups[-1].find_all('a', href=True) if a.text == 'next page']
@@ -59,26 +55,26 @@ class WikiSource(Source):
 
     def get_redirect_links(self, filtered_links: List[str]) -> List[str]:
         redirect_links = []
-        self.log('Finding redirects for {} films'.format(len(filtered_links)))
+        self.utilities.logger.log('Finding redirects for {} films'.format(len(filtered_links)))
         for link in filtered_links:
             try:
-                self.log(link)
+                self.utilities.logger.log(link)
                 link_soup = soupifyURL('{}?redirect=no'.format(link))
                 maybeRedirectMsg = link_soup.find_all('div', 'redirectMsg')
                 if len(maybeRedirectMsg) > 0:
                     redirect_links.append('https://en.wikipedia.org{}'.format(maybeRedirectMsg[0].find('a')['href']))
             except:
-                self.log("Skipping {}".format(link))
+                self.utilities.logger.log("Skipping {}".format(link))
         return redirect_links
 
     def get_films(self) -> Dict[str, str]:
-        self.log('Found {} wiki links'.format(len(self.wiki_links)))
+        self.utilities.logger.log('Found {} wiki links'.format(len(self.wiki_links)))
         raw_dict = self.get_raw_dict(self.wiki_links)
         films = WikiSource.confirm_films(raw_dict)
-        self.log('Confirmed {} films'.format(len(films)))
+        self.utilities.logger.log('Confirmed {} films'.format(len(films)))
         redirect_links = self.get_redirect_links([a for a in self.wiki_links if a not in raw_dict])
         redirect_dict = self.get_raw_dict(redirect_links)
-        self.log('Found Redirected for {} films'.format(len(redirect_dict)))
+        self.utilities.logger.log('Found Redirected for {} films'.format(len(redirect_dict)))
         films.update(WikiSource.confirm_films(redirect_dict))
-        self.log('Found {} total links'.format(len(films)))
+        self.utilities.logger.log('Found {} total links'.format(len(films)))
         return films
