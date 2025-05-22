@@ -15,10 +15,12 @@ utilities = api.CompletionistUtilities.new()
 
 @app.route('/wiki/', methods=['GET'])
 @config.api_check
-def wiki_get() -> list[dict]:
+def wiki_get() -> dict:
     wiki_link: str = request.args.get('link')
     film_data = wiki.WikiSource(wiki_link, utilities).get_film_data()
-    return [f.to_json() for f in film_data]
+    return {
+        'items': [f.to_json() for f in film_data]
+    }
 
 @click.group()
 def cli() -> None:
